@@ -111,11 +111,20 @@ class PreferenceDialog:
             row_spacing=6,
         )
 
-        self.add_option(grid, 'On start', CONFIG_START_OPTION_NAME)
-        self.add_option(grid, 'On stop', CONFIG_STOP_OPTION_NAME)
-        self.add_option(grid, 'On finish', CONFIG_FINISH_OPTION_NAME)
+        self.add_section(grid)
+        self.add_option(grid, 'On start:', CONFIG_START_OPTION_NAME)
+        self.add_option(grid, 'On stop:', CONFIG_STOP_OPTION_NAME)
+        self.add_option(grid, 'On finish:', CONFIG_FINISH_OPTION_NAME)
 
         self.widget.get_content_area().add(grid)
+
+    def add_section(self, grid):
+        label = Gtk.Label('<b>{0}</b>'.format(_('Execute command')),
+                          halign=Gtk.Align.START,
+                          margin_left=6,
+                          use_markup=True)
+        grid.attach(label, 0, self.rows, 1, 1)
+        self.rows += 1
 
     def run(self):
         self.read_config()
@@ -151,7 +160,7 @@ class PreferenceDialog:
 
     def add_option(self, grid, label, command_name):
         label = Gtk.Label(_(label),
-                          margin_right=12,
+                          margin_right=6,
                           hexpand=True,
                           halign=Gtk.Align.END)
         grid.attach(label, 0, self.rows, 1, 1)
@@ -162,7 +171,7 @@ class PreferenceDialog:
         setattr(self, command_name + '_switch', switch)
         self.rows += 1
 
-        entry = Gtk.Entry(editable=True, sensitive=False)
+        entry = Gtk.Entry(margin_left=6, margin_right=6, editable=True, sensitive=False)
         grid.attach(entry, 0, self.rows, 4, 1)
         setattr(self, command_name + '_entry', entry)
         self.rows += 1
