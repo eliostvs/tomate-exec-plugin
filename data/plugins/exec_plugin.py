@@ -160,12 +160,11 @@ class PreferenceDialog:
         switch.connect('notify::active', self.on_switch_activate, command_name)
         grid.attach_next_to(switch, label, Gtk.PositionType.RIGHT, 1, 1)
         setattr(self, command_name + '_switch', switch)
-
         self.rows += 1
+
         entry = Gtk.Entry(editable=True, sensitive=False)
         grid.attach(entry, 0, self.rows, 4, 1)
         setattr(self, command_name + '_entry', entry)
-
         self.rows += 1
 
     def on_switch_activate(self, switch, param, command_name):
