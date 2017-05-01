@@ -12,7 +12,7 @@ OBS_API_URL = https://api.opensuse.org:443/trigger/runservice?project=$(PROJECT)
 
 submodule:
 	git submodule init
-	git submodule update
+	git submodule update --recursive --remote
 
 clean:
 	find . \( -iname "*.pyc" -o -iname "__pycache__" -o -iname ".coverage" -o -iname ".cache" \) -print0 | xargs -0 rm -rf
