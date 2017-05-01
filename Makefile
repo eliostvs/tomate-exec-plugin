@@ -36,7 +36,7 @@ docker-all: docker-clean docker-build docker-test docker-enter
 	docker run --rm -v $(PACKAGE_ROOT):/code -it --entrypoint="bash" $(DOCKER_IMAGE_NAME)
 
 docker-enter:
-	docker run --rm -v $(PACKAGE_ROOT):/code -it --entrypoint="bash" $(DOCKER_IMAGE_NAME)
+	docker run --rm -v $(PACKAGE_ROOT):/code -it --workdir /code --entrypoint="bash" $(DOCKER_IMAGE_NAME)
 
 docker-lint:
 	docker run --rm -v $(PACKAGE_ROOT):/code --workdir /code $(DOCKER_IMAGE_NAME) lint

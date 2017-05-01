@@ -1,9 +1,9 @@
 [Core]
-Name = Exec
+Name = Run Command
 Module = exec_plugin
 
 [Documentation]
 Author = Elio Esteves Duarte
 Version = 0.1.0
 Website = https://github.com/eliostvs/tomate-exec-plugin
-Description = Executes commands when the timer starts, stops or finish
+Description = Run commands when the timer starts, stops or finishes
