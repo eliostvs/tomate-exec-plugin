@@ -1,7 +1,7 @@
 Tomate Exec Plugin
 ===================
 
-Tomate is a timer for the Pomodoro Techinique.
+Tomate is a timer for the Pomodoro Technique.
 With this plugin one can executes commands when the alarm ends,stops or finish.
 
 Installation
