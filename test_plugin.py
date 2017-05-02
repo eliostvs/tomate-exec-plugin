@@ -149,4 +149,4 @@ def test_execute_command_return_error(plugin, check_output):
 
     check_output.side_effect = subprocess.CalledProcessError(-1, 'command')
 
-    assert plugin.execute_command(command) is False
+    assert plugin.execute_command(command, '') is False
