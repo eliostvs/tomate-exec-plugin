@@ -100,7 +100,7 @@ class PreferenceDialog:
             buttons=(Gtk.STOCK_CLOSE, Gtk.ResponseType.CLOSE)
         )
         self.widget.connect('response', self.on_dialog_response)
-        self.widget.set_size_request(350, 400)
+        self.widget.set_size_request(350, 300)
 
         grid = Gtk.Grid(
             column_spacing=6,
