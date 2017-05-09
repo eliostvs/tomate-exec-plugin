@@ -17,10 +17,6 @@ else
 	TEST_PREFIX =
 endif
 
-submodule:
-	git submodule init
-	git submodule update --recursive --remote
-
 clean:
 	find . \( -iname "*.pyc" -o -iname "__pycache__" -o -iname ".coverage" -o -iname ".cache" \) -print0 | xargs -0 rm -rf
 
