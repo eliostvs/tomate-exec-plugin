@@ -46,40 +46,36 @@ class ExecPlugin(tomate.plugin.Plugin):
     @suppress_errors
     @on(Events.Session, [State.started])
     def on_session_started(self, *args, **kwargs):
-        command = parse_command(self.config.get(CONFIG_SECTION_NAME, CONFIG_START_OPTION_NAME))
-        if command:
-            self.execute_command(command, 'started')
+        self.execute_command(CONFIG_START_OPTION_NAME, 'started')
 
     @suppress_errors
     @on(Events.Session, [State.stopped])
     def on_session_stopped(self, *args, **kwargs):
-        command = parse_command(self.config.get(CONFIG_SECTION_NAME, CONFIG_STOP_OPTION_NAME))
-        if command:
-            self.execute_command(command, 'stopped')
+        self.execute_command(CONFIG_STOP_OPTION_NAME, 'stopped')
 
     @suppress_errors
     @on(Events.Session, [State.finished])
     def on_session_finished(self, *args, **kwargs):
-        command = parse_command(self.config.get(CONFIG_SECTION_NAME, CONFIG_FINISH_OPTION_NAME))
+        self.execute_command(CONFIG_FINISH_OPTION_NAME, 'finished')
+
+    def execute_command(self, option, event):
+        command = parse_command(self.config.get(CONFIG_SECTION_NAME, option))
+
         if command:
-            self.execute_command(command, 'finished')
+            try:
+                logger.debug("action=runCommandStart event=%s cmd='%s'", event, command)
 
-    @staticmethod
-    def execute_command(command, event):
-        try:
-            logger.debug("action=runCommandStart event=%s cmd='%s'", event, command)
+                output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
 
-            output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+                logger.debug('action=runCommandComplete event=%s output=%s', event, output)
 
-            logger.debug('action=runCommandComplete event=%s output=%s', event, output)
+                return True
 
-            return True
+            except subprocess.CalledProcessError as error:
+                logger.debug('action=runCommandFailed event=%s cmd=%s output=%s returncode=%s',
+                             event, error.cmd, error.output, error.returncode)
 
-        except subprocess.CalledProcessError as error:
-            logger.debug('action=runCommandFailed event=%s cmd=%s output=%s returncode=%s',
-                         event, error.cmd, error.output, error.returncode)
-
-            return False
+        return False
 
     def settings_window(self):
         return self.preference_window.run()

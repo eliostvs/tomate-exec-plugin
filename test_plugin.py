@@ -144,9 +144,11 @@ def test_not_execute_start_command_when_not_configured(plugin, config, check_out
     check_output.assert_not_called()
 
 
-def test_execute_command_return_error(plugin, check_output):
-    command = 'command'
+def test_execute_command_return_error(plugin, config, check_output):
+    from exec_plugin import CONFIG_START_OPTION_NAME
+
+    config.get.side_effect = get_side_effect_return(CONFIG_START_OPTION_NAME)
 
     check_output.side_effect = subprocess.CalledProcessError(-1, 'command')
 
-    assert plugin.execute_command(command, '') is False
+    assert plugin.execute_command(CONFIG_START_OPTION_NAME, '') is False
