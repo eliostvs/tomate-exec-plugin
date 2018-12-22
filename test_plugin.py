@@ -1,9 +1,7 @@
-from __future__ import unicode_literals
-
 import subprocess
+from unittest.mock import Mock
 
 import pytest
-from mock import Mock
 from tomate.constant import State
 from tomate.event import Events
 from tomate.graph import graph
