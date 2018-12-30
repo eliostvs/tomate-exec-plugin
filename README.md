@@ -21,7 +21,7 @@ Changelog
 
 #### Added
 
-- Using new session/task API
+- Change the plugin description
 
 ### 0.1.0
 
