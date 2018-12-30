@@ -1,9 +1,7 @@
-from __future__ import unicode_literals
-
 import subprocess
+from unittest.mock import Mock
 
 import pytest
-from mock import Mock
 from tomate.constant import State
 from tomate.event import Events
 from tomate.graph import graph
@@ -22,7 +20,7 @@ def check_output():
 def config():
     mock = Mock()
     graph.providers.clear()
-    graph.register_instance('tomate.config', mock)
+    graph.register_instance("tomate.config", mock)
 
     Events.Session.receivers.clear()
 
@@ -33,7 +31,7 @@ def config():
 def plugin(monkeypatch, check_output):
     import exec_plugin
 
-    monkeypatch.setattr(exec_plugin.subprocess, 'check_output', check_output)
+    monkeypatch.setattr(exec_plugin.subprocess, "check_output", check_output)
 
     return exec_plugin.ExecPlugin()
 
@@ -55,7 +53,7 @@ def get_side_effect_return(option_name):
 
     def side_effect(section, option):
         if section == CONFIG_SECTION_NAME and option == option_name:
-            return 'command'
+            return "command"
 
     return side_effect
 
@@ -71,7 +69,9 @@ def test_execute_start_command_when_configured(plugin, config, check_output):
 
     assert len(result) == 1
     assert plugin.on_session_started == method_called(result)
-    check_output.assert_called_once_with('command', shell=True, stderr=subprocess.STDOUT)
+    check_output.assert_called_once_with(
+        "command", shell=True, stderr=subprocess.STDOUT
+    )
 
 
 def test_execute_stop_command_when_configured(plugin, config, check_output):
@@ -85,7 +85,9 @@ def test_execute_stop_command_when_configured(plugin, config, check_output):
 
     assert len(result) == 1
     assert plugin.on_session_stopped == method_called(result)
-    check_output.assert_called_once_with('command', shell=True, stderr=subprocess.STDOUT)
+    check_output.assert_called_once_with(
+        "command", shell=True, stderr=subprocess.STDOUT
+    )
 
 
 def test_execute_finished_command_when_configured(plugin, config, check_output):
@@ -99,7 +101,9 @@ def test_execute_finished_command_when_configured(plugin, config, check_output):
 
     assert len(result) == 1
     assert plugin.on_session_finished == method_called(result)
-    check_output.assert_called_once_with('command', shell=True, stderr=subprocess.STDOUT)
+    check_output.assert_called_once_with(
+        "command", shell=True, stderr=subprocess.STDOUT
+    )
 
 
 def test_not_execute_finished_command_when_not_configured(plugin, config, check_output):
@@ -144,9 +148,11 @@ def test_not_execute_start_command_when_not_configured(plugin, config, check_out
     check_output.assert_not_called()
 
 
-def test_execute_command_return_error(plugin, check_output):
-    command = 'command'
+def test_execute_command_return_error(plugin, config, check_output):
+    from exec_plugin import CONFIG_START_OPTION_NAME
 
-    check_output.side_effect = subprocess.CalledProcessError(-1, 'command')
+    config.get.side_effect = get_side_effect_return(CONFIG_START_OPTION_NAME)
 
-    assert plugin.execute_command(command, '') is False
+    check_output.side_effect = subprocess.CalledProcessError(-1, "command")
+
+    assert plugin.execute_command(CONFIG_START_OPTION_NAME, "") is False
