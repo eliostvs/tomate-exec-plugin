@@ -2,9 +2,9 @@ import subprocess
 from unittest.mock import Mock
 
 import pytest
-from tomate.constant import State
-from tomate.event import Events
-from tomate.graph import graph
+from tomate.core import State
+from tomate.core.event import Events
+from tomate.core.graph import graph
 
 
 def method_called(result):
