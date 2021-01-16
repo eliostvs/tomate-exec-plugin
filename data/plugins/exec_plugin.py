@@ -127,7 +127,7 @@ class PreferenceDialog:
         self.widget.show_all()
         return self.widget
 
-    def on_dialog_response(self, widget, response):
+    def on_dialog_response(self, widget, _):
         for command_name in COMMANDS:
             entry = getattr(self, command_name + "_entry")
             command = strip_space(entry.get_text())
