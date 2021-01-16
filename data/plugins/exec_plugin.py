@@ -74,7 +74,6 @@ class ExecPlugin(Plugin):
                     error.output,
                     error.returncode,
                 )
-
         return False
 
     def read_command(self, option):
