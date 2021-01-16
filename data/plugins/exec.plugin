@@ -1,5 +1,5 @@
 [Core]
-Name = Run bash command
+Name = ExecCommand
 Module = exec_plugin
 
 [Documentation]
