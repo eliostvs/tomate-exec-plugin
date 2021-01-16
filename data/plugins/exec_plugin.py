@@ -42,19 +42,19 @@ class ExecPlugin(Plugin):
     @suppress_errors
     @on(Events.Session, [State.started])
     def on_session_started(self, *args, **kwargs):
-        return self.execute_command(CONFIG_START_OPTION_NAME, "started")
+        return self.call_command(CONFIG_START_OPTION_NAME, "start")
 
     @suppress_errors
     @on(Events.Session, [State.stopped])
     def on_session_stopped(self, *args, **kwargs):
-        return self.execute_command(CONFIG_STOP_OPTION_NAME, "stopped")
+        return self.call_command(CONFIG_STOP_OPTION_NAME, "stop")
 
     @suppress_errors
     @on(Events.Session, [State.finished])
     def on_session_finished(self, *args, **kwargs):
-        return self.execute_command(CONFIG_FINISH_OPTION_NAME, "finished")
+        return self.call_command(CONFIG_FINISH_OPTION_NAME, "finish")
 
-    def execute_command(self, option, event):
+    def call_command(self, option, event):
         command = self.read_command(option)
         if command:
             try:
