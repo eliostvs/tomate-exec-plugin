@@ -25,6 +25,7 @@ clean:
 	find . \( -iname "*.pyc" -o -iname "__pycache__" -o -iname ".coverage" -o -iname ".cache" \) -print0 | xargs -0 rm -rf
 
 test: clean
+	echo "Variables $(PYTHONPATH) ARGS=$(ARGS) PLUGINPATH=$(PLUGINPATH)
 	$(PYTHONPATH) $(DEBUG) $(ARGS) py.test test_plugin.py --cov=$(PLUGINPATH)
 
 docker-clean:
