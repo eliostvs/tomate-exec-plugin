@@ -12,17 +12,21 @@ def dispatcher():
 
 
 @pytest.fixture()
-def config(dispatcher):
+def config(dispatcher, tmpdir):
     instance = Config(dispatcher)
+    tmp_path = tmpdir.mkdir("tomate").join("tomate.config")
+    instance.config_path = lambda: tmp_path.strpath
+
     graph.providers.clear()
     graph.register_instance("tomate.config", instance)
-    Events.Session.receivers.clear()
+
     return instance
 
 
 @pytest.fixture
 def subject(config):
     import exec_plugin
+    Events.Session.receivers.clear()
     return exec_plugin.ExecPlugin()
 
 
@@ -43,8 +47,6 @@ def test_execute_commands_when_event_is_trigger(event, subject):
     (State.finished, "finish_command")
 ])
 def test_dont_execute_commands_when_not_configured(event, command, subject, config, tmpdir):
-    tmp_path = tmpdir.mkdir("tomate").join("tomate.config")
-    config.config_path = lambda: tmp_path.strpath
     config.remove("exec_plugin", command)
 
     subject.activate()
@@ -57,8 +59,6 @@ def test_dont_execute_commands_when_not_configured(event, command, subject, conf
 
 
 def test_execute_command_fail(subject, config, tmpdir):
-    tmp_path = tmpdir.mkdir("tomate").join("tomate.config")
-    config.config_path = lambda: tmp_path.strpath
     config.set("exec_plugin", "start_command", "flflflf")
 
     subject.activate()
