@@ -57,21 +57,16 @@ class ExecPlugin(Plugin):
 
     def execute_command(self, option, event):
         command = parse_command(self.config.get(CONFIG_SECTION_NAME, option))
-
         if command:
             try:
                 logger.debug("action=runCommandStart event=%s cmd='%s'", event, command)
-
                 output = subprocess.check_output(
                     command, shell=True, stderr=subprocess.STDOUT
                 )
-
                 logger.debug(
                     "action=runCommandComplete event=%s output=%s", event, output
                 )
-
                 return True
-
             except subprocess.CalledProcessError as error:
                 logger.debug(
                     "action=runCommandFailed event=%s cmd=%s output=%s returncode=%s",
