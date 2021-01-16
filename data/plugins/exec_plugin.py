@@ -42,17 +42,17 @@ class ExecPlugin(Plugin):
     @suppress_errors
     @on(Events.Session, [State.started])
     def on_session_started(self, *args, **kwargs):
-        self.execute_command(CONFIG_START_OPTION_NAME, "started")
+        return self.execute_command(CONFIG_START_OPTION_NAME, "started")
 
     @suppress_errors
     @on(Events.Session, [State.stopped])
     def on_session_stopped(self, *args, **kwargs):
-        self.execute_command(CONFIG_STOP_OPTION_NAME, "stopped")
+        return self.execute_command(CONFIG_STOP_OPTION_NAME, "stopped")
 
     @suppress_errors
     @on(Events.Session, [State.finished])
     def on_session_finished(self, *args, **kwargs):
-        self.execute_command(CONFIG_FINISH_OPTION_NAME, "finished")
+        return self.execute_command(CONFIG_FINISH_OPTION_NAME, "finished")
 
     def execute_command(self, option, event):
         command = self.read_command(option)
@@ -130,7 +130,6 @@ class PreferenceDialog:
         for command_name in COMMANDS:
             entry = getattr(self, command_name + "_entry")
             command = strip_space(entry.get_text())
-
             if command:
                 logger.debug(
                     "action=setConfig option=%s value=%s", command_name, command
