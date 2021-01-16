@@ -62,9 +62,7 @@ class ExecPlugin(Plugin):
                 output = subprocess.check_output(
                     command, shell=True, stderr=subprocess.STDOUT
                 )
-                logger.debug(
-                    "action=runCommandComplete event=%s output=%s", event, output
-                )
+                logger.debug("action=runCommandEnd event=%s output=%s", event, output)
                 return True
             except subprocess.CalledProcessError as error:
                 logger.debug(
@@ -180,13 +178,13 @@ class PreferenceDialog:
     def reset_option(self, entry, command_name):
         if entry.get_text():
             logger.debug(
-                "action=resetCommandConfig command=%s needed=true", command_name
+                "action=removeCommandConfig command=%s needed=true", command_name
             )
             self.config.remove(CONFIG_SECTION_NAME, command_name)
             entry.set_text("")
         else:
             logger.debug(
-                "action=resetCommandConfig command=%s needed=false", command_name
+                "action=removeCommandConfig command=%s needed=false", command_name
             )
 
         entry.set_sensitive(False)
