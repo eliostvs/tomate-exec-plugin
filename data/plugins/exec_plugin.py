@@ -38,7 +38,6 @@ class ExecPlugin(Plugin):
     def __init__(self):
         super(ExecPlugin, self).__init__()
         self.config = graph.get("tomate.config")
-        self.preference_window = PreferenceDialog(self.config)
 
     @suppress_errors
     @on(Events.Session, [State.started])
@@ -78,18 +77,18 @@ class ExecPlugin(Plugin):
 
         return False
 
-    def settings_window(self):
-        return self.preference_window.run()
-
     def read_command(self, option):
         return strip_space(self.config.get(CONFIG_SECTION_NAME, option))
 
+    def open_settings(self, toplevel):
+        dialog = PreferenceDialog(self.config, toplevel)
+        dialog.run()
 
 
 class PreferenceDialog:
     rows = 0
 
-    def __init__(self, config):
+    def __init__(self, config, toplevel):
         self.config = config
 
         self.widget = Gtk.Dialog(
@@ -98,6 +97,7 @@ class PreferenceDialog:
             modal=True,
             resizable=False,
             window_position=Gtk.WindowPosition.CENTER_ON_PARENT,
+            transient_for=toplevel,
         )
         self.widget.add_button(_("Close"), Gtk.ResponseType.CLOSE)
         self.widget.connect("response", self.on_dialog_response)
