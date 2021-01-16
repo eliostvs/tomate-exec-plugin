@@ -26,7 +26,7 @@ COMMANDS = [
 ]
 
 
-def parse_command(command):
+def strip_space(command):
     if command is not None:
         return command.strip()
 
@@ -56,7 +56,7 @@ class ExecPlugin(Plugin):
         self.execute_command(CONFIG_FINISH_OPTION_NAME, "finished")
 
     def execute_command(self, option, event):
-        command = parse_command(self.config.get(CONFIG_SECTION_NAME, option))
+        command = self.read_command(option)
         if command:
             try:
                 logger.debug("action=runCommandStart event=%s cmd='%s'", event, command)
@@ -80,6 +80,10 @@ class ExecPlugin(Plugin):
 
     def settings_window(self):
         return self.preference_window.run()
+
+    def read_command(self, option):
+        return strip_space(self.config.get(CONFIG_SECTION_NAME, option))
+
 
 
 class PreferenceDialog:
@@ -126,7 +130,7 @@ class PreferenceDialog:
     def on_dialog_response(self, widget, response):
         for command_name in COMMANDS:
             entry = getattr(self, command_name + "_entry")
-            command = parse_command(entry.get_text())
+            command = strip_space(entry.get_text())
 
             if command:
                 logger.debug(
