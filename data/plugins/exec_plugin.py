@@ -75,12 +75,11 @@ class ExecPlugin(Plugin):
     def read_command(self, option):
         return strip_space(self.config.get(CONFIG_SECTION_NAME, option))
 
-    def open_settings(self, toplevel):
-        dialog = PreferenceDialog(self.config, toplevel)
-        dialog.run()
+    def settings_window(self, toplevel):
+        return SettingsDialog(self.config, toplevel)
 
 
-class PreferenceDialog:
+class SettingsDialog:
     rows = 0
 
     def __init__(self, config, toplevel):
@@ -101,9 +100,9 @@ class PreferenceDialog:
         grid = Gtk.Grid(column_spacing=12, row_spacing=12, margin_bottom=12)
 
         self.create_section(grid)
-        self.create_option(grid, "On start:", CONFIG_START_OPTION_NAME)
-        self.create_option(grid, "On stop:", CONFIG_STOP_OPTION_NAME)
-        self.create_option(grid, "On finish:", CONFIG_FINISH_OPTION_NAME)
+        self.create_option(grid, _("On start:"), CONFIG_START_OPTION_NAME)
+        self.create_option(grid, _("On stop:"), CONFIG_STOP_OPTION_NAME)
+        self.create_option(grid, _("On finish:"), CONFIG_FINISH_OPTION_NAME)
 
         self.widget.get_content_area().add(grid)
 
