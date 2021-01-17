@@ -147,22 +147,22 @@ class SettingsDialog:
                 switch.set_active(False)
                 entry.set_sensitive(False)
 
-    def create_option(self, grid, label, command_name):
+    def create_option(self, grid, label, command):
         label = Gtk.Label(label=_(label), hexpand=True, halign=Gtk.Align.END)
         grid.attach(label, 0, self.rows, 1, 1)
 
-        switch = Gtk.Switch(hexpand=True, halign=Gtk.Align.START)
-        switch.connect("notify::active", self.on_switch_activate, command_name)
+        switch = Gtk.Switch(hexpand=True, halign=Gtk.Align.START, name=command + "_switch")
+        switch.connect("notify::active", self.on_switch_activate, command)
         grid.attach_next_to(switch, label, Gtk.PositionType.RIGHT, 1, 1)
-        setattr(self, command_name + "_switch", switch)
+        setattr(self, command + "_switch", switch)
         self.rows += 1
 
-        entry = Gtk.Entry(editable=True, sensitive=False)
+        entry = Gtk.Entry(editable=True, sensitive=False, name=command + "_entry")
         grid.attach(entry, 0, self.rows, 4, 1)
-        setattr(self, command_name + "_entry", entry)
+        setattr(self, command + "_entry", entry)
         self.rows += 1
 
-    def on_switch_activate(self, switch, param, command_name):
+    def on_switch_activate(self, switch, _, command_name):
         entry = getattr(self, command_name + "_entry")
 
         if switch.get_active():
@@ -171,11 +171,7 @@ class SettingsDialog:
             self.reset_option(entry, command_name)
 
     def reset_option(self, entry, command_name):
-        if entry.get_text():
-            logger.debug("action=removeCommandConfig command=%s needed=true", command_name)
-            self.config.remove(CONFIG_SECTION_NAME, command_name)
-            entry.set_text("")
-        else:
-            logger.debug("action=removeCommandConfig command=%s needed=false", command_name)
-
+        logger.debug("action=removeCommandConfig command=%s", command_name)
+        self.config.remove(CONFIG_SECTION_NAME, command_name)
+        entry.set_text("")
         entry.set_sensitive(False)
