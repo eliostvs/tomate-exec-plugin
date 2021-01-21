@@ -4,8 +4,8 @@ DOCKER_IMAGE = eliostvs/tomate
 OBS_API_URL  = https://api.opensuse.org:443/trigger/runservice
 PLUGINPATH   = $(CURDIR)/data/plugins
 PYTHONPATH   = PYTHONPATH=$(CURDIR)/tomate:$(PLUGINPATH)
-VERSION 		 = `cat .bumpversion.cfg | grep current_version | awk '{print $$3}'`
-WORKDIR 		 = /code
+VERSION      = `cat .bumpversion.cfg | grep current_version | awk '{print $$3}'`
+WORKDIR      = /code
 XDGPATHS     = XDG_CONFIG_HOME=$(CURDIR)/tests/data
 
 ifeq ($(shell which xvfb-run 1> /dev/null && echo yes),yes)
