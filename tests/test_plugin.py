@@ -6,7 +6,7 @@ from tomate.pomodoro.config import Config
 from tomate.pomodoro.event import Events
 from tomate.pomodoro.graph import graph
 
-from tomate.ui.test import query_selector, by_name
+from tomate.ui.test import Q
 
 
 @pytest.fixture()
@@ -90,11 +90,11 @@ class TestSettingsWindow:
         window = subject.settings_window(Gtk.Window())
         window.run()
 
-        entry = query_selector(window.widget, by_name(f"{name}_entry"))
+        entry = Q.select(window.widget, Q.name(f"{name}_entry"))
         assert entry is not None
         assert entry.get_text() == command
 
-        switch = query_selector(window.widget, by_name(f"{name}_switch"))
+        switch = Q.select(window.widget, Q.name(f"{name}_switch"))
         assert switch is not None
         assert switch.get_active() is True
 
@@ -103,12 +103,12 @@ class TestSettingsWindow:
         window.run()
 
         name = "start_command"
-        switch = query_selector(window.widget, by_name(f"{name}_switch"))
+        switch = Q.select(window.widget, Q.name(f"{name}_switch"))
         assert switch is not None
         switch.set_active(False)
         window.on_switch_activate(switch, None, name)
 
-        entry = query_selector(window.widget, by_name(f"{name}_entry"))
+        entry = Q.select(window.widget, Q.name(f"{name}_entry"))
         assert entry is not None
         assert entry.get_sensitive() is False
         assert entry.get_text() == ""
@@ -127,11 +127,11 @@ class TestSettingsWindow:
         window = subject.settings_window(Gtk.Window())
         window.run()
 
-        switch = query_selector(window.widget, by_name(f"{name}_switch"))
+        switch = Q.select(window.widget, Q.name(f"{name}_switch"))
         assert switch is not None
         assert switch.get_active() is False
 
-        entry = query_selector(window.widget, by_name(f"{name}_entry"))
+        entry = Q.select(window.widget, Q.name(f"{name}_entry"))
         assert entry is not None
         assert entry.get_text() == ""
 
@@ -140,7 +140,7 @@ class TestSettingsWindow:
         window.run()
 
         name = "start_command"
-        entry = query_selector(window.widget, by_name(f"{name}_entry"))
+        entry = Q.select(window.widget, Q.name(f"{name}_entry"))
         assert entry is not None
         entry.set_text("echo changed")
 
