@@ -1,3 +1,5 @@
+import subprocess
+
 import pytest
 from blinker import Namespace
 from gi.repository import Gtk
@@ -5,8 +7,16 @@ from tomate.pomodoro import State
 from tomate.pomodoro.config import Config
 from tomate.pomodoro.event import Events
 from tomate.pomodoro.graph import graph
-
 from tomate.ui.test import Q
+
+
+@pytest.fixture()
+def check_output(mocker, monkeypatch):
+    import exec_plugin
+
+    m = mocker.Mock()
+    monkeypatch.setattr(exec_plugin.subprocess, "check_output", m)
+    return m
 
 
 @pytest.fixture()
@@ -34,46 +44,56 @@ def subject(config):
     return exec_plugin.ExecPlugin()
 
 
-@pytest.mark.parametrize("event", [State.started, State.stopped, State.finished])
-def test_execute_commands_when_event_is_trigger(event, subject):
-    subject.activate()
-
-    calls = Events.Session.send(event)
-    assert len(calls) == 1
-
-    _, result = calls[0]
-    assert result is True
-
-
 @pytest.mark.parametrize(
-    "event, command",
+    "event, option",
     [
         (State.started, "start_command"),
         (State.stopped, "stop_command"),
         (State.finished, "finish_command"),
     ],
 )
-def test_dont_execute_commands_when_not_configured(event, command, subject, config, tmpdir):
-    config.remove("exec_plugin", command)
+def test_execute_commands_when_event_is_trigger(event, option, subject, config, check_output):
+    subject.activate()
+
+    Events.Session.send(event)
+
+    command = config.get("exec_plugin", option)
+    check_output.assert_called_once_with(command, shell=True, stderr=subprocess.STDOUT)
+
+
+@pytest.mark.parametrize(
+    "event, option",
+    [
+        (State.started, "start_command"),
+        (State.stopped, "stop_command"),
+        (State.finished, "finish_command"),
+    ],
+)
+def test_dont_execute_commands_when_not_configured(event, option, subject, config, check_output):
+    config.remove("exec_plugin", option)
 
     subject.activate()
 
-    calls = Events.Session.send(event)
-    assert len(calls) == 1
+    Events.Session.send(event)
 
-    _, result = calls[0]
-    assert result is False
+    check_output.assert_not_called()
 
 
-def test_execute_command_fail(subject, config, tmpdir):
+def test_execute_command_fail(subject, config):
     config.set("exec_plugin", "start_command", "flflflf")
 
     subject.activate()
 
     calls = Events.Session.send(State.started)
+    assert_methods_called(calls)
+
+
+def assert_methods_called(calls):
     assert len(calls) == 1
 
-    _, result = calls[0]
+    command_result = 0
+    _, result = calls[command_result]
+
     assert result is False
 
 
