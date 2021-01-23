@@ -25,7 +25,7 @@ clean:
 	find . \( -iname "*.pyc" -o -iname "__pycache__" -o -iname ".coverage" -o -iname ".cache" \) -print0 | xargs -0 rm -rf
 
 test: clean
-	echo "$(XDGPATHS) $(PYTHONPATH) ARGS=$(ARGS) PLUGINPATH=$(PLUGINPATH) PYTEST=$(PYTEST)"
+	echo "$(XDGPATHS) $(PYTHONPATH) $(ARGS) py.test $(PYTEST) --cov=$(PLUGINPATH)"
 	$(XDGPATHS) $(PYTHONPATH) $(ARGS) py.test $(PYTEST) --cov=$(PLUGINPATH)
 
 docker-clean:
