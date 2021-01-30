@@ -1,6 +1,5 @@
-import subprocess
-
 import pytest
+import subprocess
 from blinker import Namespace
 from gi.repository import Gtk
 from tomate.pomodoro import State
@@ -52,7 +51,7 @@ def subject(config):
         (State.finished, "finish_command"),
     ],
 )
-def test_execute_commands_when_event_is_trigger(event, option, subject, config, check_output):
+def test_execute_command_when_event_is_trigger(event, option, subject, config, check_output):
     subject.activate()
 
     Events.Session.send(event)
@@ -69,7 +68,7 @@ def test_execute_commands_when_event_is_trigger(event, option, subject, config, 
         (State.finished, "finish_command"),
     ],
 )
-def test_dont_execute_commands_when_not_configured(event, option, subject, config, check_output):
+def test_do_not_execute_commands_when_not_configured(event, option, subject, config, check_output):
     config.remove("exec_plugin", option)
 
     subject.activate()
