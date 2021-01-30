@@ -1,5 +1,6 @@
 .SILENT:
 
+DEBUG        = TOMATE_DEBUG=1
 DOCKER_IMAGE = eliostvs/tomate
 OBS_API_URL  = https://api.opensuse.org:443/trigger/runservice
 PLUGINPATH   = $(CURDIR)/data/plugins
@@ -25,8 +26,8 @@ clean:
 	find . \( -iname "*.pyc" -o -iname "__pycache__" -o -iname ".coverage" -o -iname ".cache" \) -print0 | xargs -0 rm -rf
 
 test: clean
-	echo "$(XDGPATHS) $(PYTHONPATH) $(ARGS) py.test $(PYTEST) --cov=$(PLUGINPATH)"
-	$(XDGPATHS) $(PYTHONPATH) $(ARGS) py.test $(PYTEST) --cov=$(PLUGINPATH)
+	echo "$(DEBUG) $(XDGPATHS) $(PYTHONPATH) $(ARGS) py.test $(PYTEST) --cov=$(PLUGINPATH)"
+	$(DEBUG) $(XDGPATHS) $(PYTHONPATH) $(ARGS) py.test $(PYTEST) --cov=$(PLUGINPATH)
 
 docker-clean:
 	docker rmi $(DOCKER_IMAGE) 2> /dev/null || echo $(DOCKER_IMAGE) not found!
