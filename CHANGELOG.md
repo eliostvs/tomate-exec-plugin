@@ -1,19 +1,26 @@
-### [Unreleased]
+# Changelog
 
-#### Changed
+All notable changes to this project will be documented in this file.
 
-- Using new core API
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+
+- New tomate API
 - Rename plugin
 
-### 0.2.0
+## 0.2.0
 
-#### Added
+### Changed
 
-- Change the plugin description
+- Plugin description
 
-### 0.1.0
+## 0.1.0
 
 
-#### Added
+### Added
 
 - First release
