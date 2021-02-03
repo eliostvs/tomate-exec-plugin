@@ -1,6 +1,7 @@
-import pytest
 import subprocess
-from blinker import Namespace
+
+import pytest
+from blinker import signal
 from gi.repository import Gtk
 from tomate.pomodoro import State
 from tomate.pomodoro.config import Config
@@ -19,27 +20,21 @@ def check_output(mocker, monkeypatch):
 
 
 @pytest.fixture()
-def dispatcher():
-    return Namespace().signal("dispatcher")
-
-
-@pytest.fixture()
-def config(dispatcher, tmpdir):
-    instance = Config(dispatcher)
+def config(tmpdir):
+    instance = Config(signal("dispatcher"))
     tmp_path = tmpdir.mkdir("tomate").join("tomate.config")
     instance.config_path = lambda: tmp_path.strpath
 
     graph.providers.clear()
     graph.register_instance("tomate.config", instance)
-
     return instance
 
 
 @pytest.fixture
 def subject(config):
-    import exec_plugin
-
     Events.Session.receivers.clear()
+
+    import exec_plugin
     return exec_plugin.ExecPlugin()
 
 
