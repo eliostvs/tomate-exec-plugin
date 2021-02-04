@@ -9,6 +9,8 @@ from tomate.pomodoro.event import Events
 from tomate.pomodoro.graph import graph
 from tomate.ui.test import Q
 
+SECTION_NAME = "exec_plugin"
+
 
 @pytest.fixture()
 def check_output(mocker, monkeypatch):
@@ -51,7 +53,7 @@ def test_execute_command_when_event_is_trigger(event, option, subject, config, c
 
     Events.Session.send(event)
 
-    command = config.get("exec_plugin", option)
+    command = config.get(SECTION_NAME, option)
     check_output.assert_called_once_with(command, shell=True, stderr=subprocess.STDOUT)
 
 
@@ -64,8 +66,7 @@ def test_execute_command_when_event_is_trigger(event, option, subject, config, c
     ],
 )
 def test_do_not_execute_commands_when_not_configured(event, option, subject, config, check_output):
-    config.remove("exec_plugin", option)
-
+    config.remove(SECTION_NAME, option)
     subject.activate()
 
     Events.Session.send(event)
@@ -74,7 +75,7 @@ def test_do_not_execute_commands_when_not_configured(event, option, subject, con
 
 
 def test_execute_command_fail(subject, config):
-    config.set("exec_plugin", "start_command", "flflflf")
+    config.set(SECTION_NAME, "start_command", "flflflf")
 
     subject.activate()
 
@@ -93,70 +94,76 @@ def assert_methods_called(calls):
 
 class TestSettingsWindow:
     @pytest.mark.parametrize(
-        "name, command",
+        "option, command",
         [
             ("start_command", "echo start"),
             ("stop_command", "echo stop"),
             ("finish_command", "echo finish"),
         ],
     )
-    def test_when_has_commands(self, name, command, subject):
+    def test_when_has_commands(self, option, command, subject):
         window = subject.settings_window(Gtk.Window())
         window.run()
 
-        entry = Q.select(window.widget, Q.name(f"{name}_entry"))
-        assert entry is not None
+        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
         assert entry.get_text() == command
 
-        switch = Q.select(window.widget, Q.name(f"{name}_switch"))
-        assert switch is not None
+        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
         assert switch.get_active() is True
 
-    def test_disable_command(self, subject, config):
+    @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
+    def test_disable_command(self, option, subject, config):
         window = subject.settings_window(Gtk.Window())
         window.run()
 
-        name = "start_command"
-        switch = Q.select(window.widget, Q.name(f"{name}_switch"))
-        assert switch is not None
+        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
         switch.set_active(False)
-        window.on_switch_activate(switch, None, name)
+        switch.notify("activate")
 
-        entry = Q.select(window.widget, Q.name(f"{name}_entry"))
-        assert entry is not None
+        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
         assert entry.get_sensitive() is False
         assert entry.get_text() == ""
 
         window.widget.emit("response", 0)
-        assert config.has_option("exec_plugin", name) is False
+        assert config.has_option(SECTION_NAME, option) is False
 
-    @pytest.mark.parametrize("name", ["start_command", "stop_command", "finish_command"])
-    def test_when_has_not_commands(self, name, subject, config):
-        section = "exec_plugin"
-        config.remove_section(section)
-        config.save()
-
-        assert config.has_section(section) is False
+    @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
+    def test_enable_command(self, option, subject, config):
+        config.remove(SECTION_NAME, option)
 
         window = subject.settings_window(Gtk.Window())
         window.run()
 
-        switch = Q.select(window.widget, Q.name(f"{name}_switch"))
-        assert switch is not None
+        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
+        switch.set_active(True)
+        switch.notify("activate")
+
+        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
+        assert entry.get_sensitive() is True
+
+    @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
+    def test_when_has_not_commands(self, option, subject, config):
+        config.remove_section(SECTION_NAME)
+        config.save()
+
+        assert config.has_section(SECTION_NAME) is False
+
+        window = subject.settings_window(Gtk.Window())
+        window.run()
+
+        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
         assert switch.get_active() is False
 
-        entry = Q.select(window.widget, Q.name(f"{name}_entry"))
-        assert entry is not None
+        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
         assert entry.get_text() == ""
 
     def test_change_command(self, subject, config):
         window = subject.settings_window(Gtk.Window())
         window.run()
 
-        name = "start_command"
-        entry = Q.select(window.widget, Q.name(f"{name}_entry"))
-        assert entry is not None
+        option = "start_command"
+        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
         entry.set_text("echo changed")
 
         window.widget.emit("response", 0)
-        assert config.get("exec_plugin", name) == "echo changed"
+        assert config.get(SECTION_NAME, option) == "echo changed"
