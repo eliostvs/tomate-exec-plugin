@@ -23,7 +23,7 @@ format:
 	black data/plugins/
 
 clean:
-	find . \( -iname "*.pyc" -o -iname "__pycache__" -o -iname ".coverage" -o -iname ".cache" \) -print0 | xargs -0 rm -rf
+	find . \( -iname "*.pyc" -o -iname "__pycache__" -o -iname ".coverage" -o -iname ".cache" -o -iname "*.egg-info" \) -print0 | xargs -0 rm -rf
 
 test: clean
 	echo "$(DEBUG) $(XDGPATHS) $(PYTHONPATH) $(ARGS) py.test $(PYTEST) --cov=$(PLUGINPATH)"
