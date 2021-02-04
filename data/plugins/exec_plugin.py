@@ -15,14 +15,14 @@ from tomate.pomodoro.plugin import Plugin, suppress_errors
 
 logger = logging.getLogger(__name__)
 
-CONFIG_SECTION_NAME = "exec_plugin"
-CONFIG_START_OPTION_NAME = "start_command"
-CONFIG_STOP_OPTION_NAME = "stop_command"
-CONFIG_FINISH_OPTION_NAME = "finish_command"
+SECTION_NAME = "exec_plugin"
+START_OPTION_NAME = "start_command"
+STOP_OPTION_NAME = "stop_command"
+FINISH_OPTION_NAME = "finish_command"
 COMMANDS = [
-    CONFIG_START_OPTION_NAME,
-    CONFIG_STOP_OPTION_NAME,
-    CONFIG_FINISH_OPTION_NAME,
+    START_OPTION_NAME,
+    STOP_OPTION_NAME,
+    FINISH_OPTION_NAME,
 ]
 
 
@@ -42,17 +42,17 @@ class ExecPlugin(Plugin):
     @suppress_errors
     @on(Events.Session, [State.started])
     def on_session_started(self, *args, **kwargs):
-        return self.call_command(CONFIG_START_OPTION_NAME, "start")
+        return self.call_command(START_OPTION_NAME, "start")
 
     @suppress_errors
     @on(Events.Session, [State.stopped])
     def on_session_stopped(self, *args, **kwargs):
-        return self.call_command(CONFIG_STOP_OPTION_NAME, "stop")
+        return self.call_command(STOP_OPTION_NAME, "stop")
 
     @suppress_errors
     @on(Events.Session, [State.finished])
     def on_session_finished(self, *args, **kwargs):
-        return self.call_command(CONFIG_FINISH_OPTION_NAME, "finish")
+        return self.call_command(FINISH_OPTION_NAME, "finish")
 
     def call_command(self, option, event):
         command = self.read_command(option)
@@ -73,7 +73,7 @@ class ExecPlugin(Plugin):
         return False
 
     def read_command(self, option):
-        return strip_space(self.config.get(CONFIG_SECTION_NAME, option))
+        return strip_space(self.config.get(SECTION_NAME, option))
 
     def settings_window(self, toplevel):
         return SettingsDialog(self.config, toplevel)
@@ -94,15 +94,15 @@ class SettingsDialog:
             transient_for=toplevel,
         )
         self.widget.add_button(_("Close"), Gtk.ResponseType.CLOSE)
-        self.widget.connect("response", self.on_dialog_response)
+        self.widget.connect("response", self.on_close)
         self.widget.set_size_request(350, -1)
 
         grid = Gtk.Grid(column_spacing=12, row_spacing=12, margin_bottom=12)
 
         self.create_section(grid)
-        self.create_option(grid, _("On start:"), CONFIG_START_OPTION_NAME)
-        self.create_option(grid, _("On stop:"), CONFIG_STOP_OPTION_NAME)
-        self.create_option(grid, _("On finish:"), CONFIG_FINISH_OPTION_NAME)
+        self.create_option(grid, _("On start:"), START_OPTION_NAME)
+        self.create_option(grid, _("On stop:"), STOP_OPTION_NAME)
+        self.create_option(grid, _("On finish:"), FINISH_OPTION_NAME)
 
         self.widget.get_content_area().add(grid)
 
@@ -121,21 +121,21 @@ class SettingsDialog:
         self.widget.show_all()
         return self.widget
 
-    def on_dialog_response(self, widget, _):
+    def on_close(self, widget, _):
         for command_name in COMMANDS:
             entry = getattr(self, command_name + "_entry")
             command = strip_space(entry.get_text())
             if command:
                 logger.debug("action=setConfig option=%s value=%s", command_name, command)
-                self.config.set(CONFIG_SECTION_NAME, command_name, command)
+                self.config.set(SECTION_NAME, command_name, command)
 
-        widget.hide()
+        widget.destroy()
 
     def read_config(self):
         logger.debug("action=readConfig")
 
         for command_name in COMMANDS:
-            command = self.config.get(CONFIG_SECTION_NAME, command_name)
+            command = self.config.get(SECTION_NAME, command_name)
             switch = getattr(self, command_name + "_switch")
             entry = getattr(self, command_name + "_entry")
 
@@ -172,6 +172,6 @@ class SettingsDialog:
 
     def reset_option(self, entry, command_name):
         logger.debug("action=removeCommandConfig command=%s", command_name)
-        self.config.remove(CONFIG_SECTION_NAME, command_name)
+        self.config.remove(SECTION_NAME, command_name)
         entry.set_text("")
         entry.set_sensitive(False)
