@@ -85,25 +85,23 @@ class SettingsDialog:
     def __init__(self, config, toplevel):
         self.config = config
 
-        self.widget = Gtk.Dialog(
-            border_width=11,
-            title=_("Preferences"),
-            modal=True,
-            resizable=False,
-            window_position=Gtk.WindowPosition.CENTER_ON_PARENT,
-            transient_for=toplevel,
-        )
-        self.widget.add_button(_("Close"), Gtk.ResponseType.CLOSE)
-        self.widget.connect("response", self.on_close)
-        self.widget.set_size_request(350, -1)
-
         grid = Gtk.Grid(column_spacing=12, row_spacing=12, margin_bottom=12)
-
         self.create_section(grid)
         self.create_option(grid, _("On start:"), START_OPTION_NAME)
         self.create_option(grid, _("On stop:"), STOP_OPTION_NAME)
         self.create_option(grid, _("On finish:"), FINISH_OPTION_NAME)
 
+        self.widget = Gtk.Dialog(
+            border_width=12,
+            modal=True,
+            resizable=False,
+            title=_("Preferences"),
+            transient_for=toplevel,
+            window_position=Gtk.WindowPosition.CENTER_ON_PARENT,
+        )
+        self.widget.add_button(_("Close"), Gtk.ResponseType.CLOSE)
+        self.widget.connect("response", self.on_close)
+        self.widget.set_size_request(350, -1)
         self.widget.get_content_area().add(grid)
 
     def create_section(self, grid):
