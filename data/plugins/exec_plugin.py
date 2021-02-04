@@ -152,7 +152,7 @@ class SettingsDialog:
         grid.attach(label, 0, self.rows, 1, 1)
 
         switch = Gtk.Switch(hexpand=True, halign=Gtk.Align.START, name=command + "_switch")
-        switch.connect("notify::active", self.on_switch_activate, command)
+        switch.connect("notify::active", self.on_switch_toggle, command)
         grid.attach_next_to(switch, label, Gtk.PositionType.RIGHT, 1, 1)
         setattr(self, command + "_switch", switch)
         self.rows += 1
@@ -162,7 +162,7 @@ class SettingsDialog:
         setattr(self, command + "_entry", entry)
         self.rows += 1
 
-    def on_switch_activate(self, switch, _, command_name):
+    def on_switch_toggle(self, switch, _, command_name):
         entry = getattr(self, command_name + "_entry")
 
         if switch.get_active():
