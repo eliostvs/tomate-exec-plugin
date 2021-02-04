@@ -101,15 +101,31 @@ class TestSettingsWindow:
             ("finish_command", "echo finish"),
         ],
     )
-    def test_when_has_commands(self, option, command, subject):
+    def test_with_custom_commands(self, option, command, subject):
         window = subject.settings_window(Gtk.Window())
         window.run()
+
+        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
+        assert switch.get_active() is True
 
         entry = Q.select(window.widget, Q.name(f"{option}_entry"))
         assert entry.get_text() == command
 
+    @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
+    def test_without_custom_commands(self, option, subject, config):
+        config.remove_section(SECTION_NAME)
+        config.save()
+
+        assert config.has_section(SECTION_NAME) is False
+
+        window = subject.settings_window(Gtk.Window())
+        window.run()
+
         switch = Q.select(window.widget, Q.name(f"{option}_switch"))
-        assert switch.get_active() is True
+        assert switch.get_active() is False
+
+        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
+        assert entry.get_text() == ""
 
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
     def test_disable_command(self, option, subject, config):
@@ -140,29 +156,6 @@ class TestSettingsWindow:
 
         entry = Q.select(window.widget, Q.name(f"{option}_entry"))
         assert entry.get_sensitive() is True
-
-    @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
-    def test_when_has_not_commands(self, option, subject, config):
-        config.remove_section(SECTION_NAME)
-        config.save()
-
-        assert config.has_section(SECTION_NAME) is False
-
-        window = subject.settings_window(Gtk.Window())
-        window.run()
-
-        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
-        assert switch.get_active() is False
-
-        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
-        assert entry.get_text() == ""
-
-    def test_change_command(self, subject, config):
-        window = subject.settings_window(Gtk.Window())
-        window.run()
-
-        option = "start_command"
-        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
         entry.set_text("echo changed")
 
         window.widget.emit("response", 0)
