@@ -84,13 +84,14 @@ class SettingsDialog:
 
     def __init__(self, config, toplevel):
         self.config = config
+        self.create_widget(toplevel)
 
+    def create_widget(self, toplevel):
         grid = Gtk.Grid(column_spacing=12, row_spacing=12, margin_bottom=12)
         self.create_section(grid)
         self.create_option(grid, _("On start:"), START_OPTION_NAME)
         self.create_option(grid, _("On stop:"), STOP_OPTION_NAME)
         self.create_option(grid, _("On finish:"), FINISH_OPTION_NAME)
-
         self.widget = Gtk.Dialog(
             border_width=12,
             modal=True,
