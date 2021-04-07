@@ -3,10 +3,11 @@ import subprocess
 import pytest
 from blinker import NamedSignal
 from gi.repository import Gtk
+
 from tomate.pomodoro.config import Config
 from tomate.pomodoro.event import Events
 from tomate.pomodoro.graph import graph
-from tomate.ui.test import Q
+from tomate.ui.testing import Q
 
 SECTION_NAME = "exec_plugin"
 
