@@ -8,7 +8,6 @@ gi.require_version("Gtk", "3.0")
 
 from gi.repository import Gtk
 
-from tomate.pomodoro import State
 from tomate.pomodoro.event import Events, on
 from tomate.pomodoro.graph import graph
 from tomate.pomodoro.plugin import Plugin, suppress_errors
@@ -40,18 +39,18 @@ class ExecPlugin(Plugin):
         self.config = graph.get("tomate.config")
 
     @suppress_errors
-    @on(Events.Session, [State.started])
-    def on_session_started(self, *args, **kwargs):
+    @on(Events.SESSION_START)
+    def on_session_started(self, *_, **__):
         return self.call_command(START_OPTION_NAME, "start")
 
     @suppress_errors
-    @on(Events.Session, [State.stopped])
-    def on_session_stopped(self, *args, **kwargs):
+    @on(Events.SESSION_INTERRUPT)
+    def on_session_stopped(self, *_, **__):
         return self.call_command(STOP_OPTION_NAME, "stop")
 
     @suppress_errors
-    @on(Events.Session, [State.finished])
-    def on_session_finished(self, *args, **kwargs):
+    @on(Events.SESSION_END)
+    def on_session_finished(self, *_, **__):
         return self.call_command(FINISH_OPTION_NAME, "finish")
 
     def call_command(self, option, event):
