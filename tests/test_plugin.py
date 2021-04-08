@@ -15,6 +15,7 @@ SECTION_NAME = "exec_plugin"
 @pytest.fixture
 def check_output(mocker, monkeypatch):
     import exec_plugin
+
     check_output = mocker.Mock(spec=subprocess.check_output)
     monkeypatch.setattr(exec_plugin.subprocess, "check_output", check_output)
     return check_output
@@ -43,6 +44,7 @@ def subject(bus, config):
     graph.register_instance("tomate.bus", bus)
 
     import exec_plugin
+
     return exec_plugin.ExecPlugin()
 
 
