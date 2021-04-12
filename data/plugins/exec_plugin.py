@@ -9,9 +9,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 import tomate.pomodoro.plugin as plugin
-from tomate.pomodoro.event import Events, on
-from tomate.pomodoro.graph import graph
-from tomate.pomodoro.plugin import suppress_errors
+from tomate.pomodoro import Events, on, graph, suppress_errors
 
 logger = logging.getLogger(__name__)
 
@@ -139,12 +137,11 @@ class SettingsDialog:
             entry = getattr(self, command_name + "_entry")
 
             if command is not None:
-                switch.set_active(True)
-                entry.set_sensitive(True)
-                entry.set_text(command)
+                switch.props.active = True
+                entry.set_properties(sensitive=True, text=command)
             else:
-                switch.set_active(False)
-                entry.set_sensitive(False)
+                switch.props.active = False
+                entry.props.sensitive = False
 
     def create_option(self, grid, label, command):
         label = Gtk.Label(label=_(label), hexpand=True, halign=Gtk.Align.END)
@@ -170,7 +167,6 @@ class SettingsDialog:
             self.reset_option(entry, command_name)
 
     def reset_option(self, entry, command_name):
-        logger.debug("action=removeCommandConfig command=%s", command_name)
+        logger.debug("action=remove_config command=%s", command_name)
         self.config.remove(SECTION_NAME, command_name)
-        entry.set_text("")
-        entry.set_sensitive(False)
+        entry.set_properties(text="", sensitive=False)

@@ -1,12 +1,9 @@
 import subprocess
 
 import pytest
-from blinker import NamedSignal
 from gi.repository import Gtk
 
-from tomate.pomodoro.config import Config
-from tomate.pomodoro.event import Events
-from tomate.pomodoro.graph import graph
+from tomate.pomodoro import Bus, Config, Events, graph
 from tomate.ui.testing import Q
 
 SECTION_NAME = "exec_plugin"
@@ -22,8 +19,8 @@ def check_output(mocker, monkeypatch):
 
 
 @pytest.fixture
-def bus():
-    return NamedSignal("Test")
+def bus() -> Bus:
+    return Bus()
 
 
 @pytest.fixture
@@ -38,14 +35,16 @@ def config(bus, tmpdir):
 
 
 @pytest.fixture
-def subject(bus, config):
+def plugin(bus, config):
     graph.providers.clear()
     graph.register_instance("tomate.config", config)
     graph.register_instance("tomate.bus", bus)
 
     import exec_plugin
 
-    return exec_plugin.ExecPlugin()
+    instance = exec_plugin.ExecPlugin()
+    instance.connect(bus)
+    return instance
 
 
 @pytest.mark.parametrize(
@@ -56,8 +55,8 @@ def subject(bus, config):
         (Events.SESSION_END, "finish_command"),
     ],
 )
-def test_execute_command_when_event_is_trigger(event, option, bus, check_output, config, subject):
-    subject.activate()
+def test_execute_command_when_event_is_trigger(event, option, bus, check_output, config, plugin):
+    plugin.activate()
 
     bus.send(event)
 
@@ -73,31 +72,21 @@ def test_execute_command_when_event_is_trigger(event, option, bus, check_output,
         (Events.SESSION_END, "finish_command"),
     ],
 )
-def test_does_not_execute_commands_when_they_are_not_configured(event, option, bus, check_output, config, subject):
+def test_does_not_execute_commands_when_they_are_not_configured(event, option, bus, check_output, config, plugin):
     config.remove(SECTION_NAME, option)
-    subject.activate()
+    plugin.activate()
 
-    bus.send(event)
+    assert bus.send(event) == [False]
 
     check_output.assert_not_called()
 
 
-def test_execute_command_fail(bus, config, subject):
-    config.set(SECTION_NAME, "start_command", "flflflf")
+def test_execute_command_fail(bus, config, plugin):
+    config.set(SECTION_NAME, "start_command", "fail")
 
-    subject.activate()
+    plugin.activate()
 
-    calls = bus.send(Events.SESSION_START)
-    assert_methods_called(calls)
-
-
-def assert_methods_called(calls):
-    assert len(calls) == 1
-
-    command_result = 0
-    _, result = calls[command_result]
-
-    assert result is False
+    assert bus.send(Events.SESSION_START) == [False]
 
 
 class TestSettingsWindow:
@@ -109,62 +98,62 @@ class TestSettingsWindow:
             ("finish_command", "echo finish"),
         ],
     )
-    def test_with_custom_commands(self, option, command, subject):
-        window = subject.settings_window(Gtk.Window())
+    def test_with_custom_commands(self, option, command, plugin):
+        window = plugin.settings_window(Gtk.Window())
         window.run()
 
-        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
-        assert switch.get_active() is True
+        switch = Q.select(window.widget, Q.props("name", f"{option}_switch"))
+        assert switch.props.active is True
 
-        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
-        assert entry.get_text() == command
+        entry = Q.select(window.widget, Q.props("name", f"{option}_entry"))
+        assert entry.props.text == command
 
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
-    def test_without_custom_commands(self, option, config, subject):
+    def test_without_custom_commands(self, option, config, plugin):
         config.remove_section(SECTION_NAME)
         config.save()
 
         assert config.has_section(SECTION_NAME) is False
 
-        window = subject.settings_window(Gtk.Window())
+        window = plugin.settings_window(Gtk.Window())
         window.run()
 
-        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
-        assert switch.get_active() is False
+        switch = Q.select(window.widget, Q.props("name", f"{option}_switch"))
+        assert switch.props.active is False
 
-        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
-        assert entry.get_text() == ""
+        entry = Q.select(window.widget, Q.props("name", f"{option}_entry"))
+        assert entry.props.text == ""
 
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
-    def test_disable_command(self, option, config, subject):
-        window = subject.settings_window(Gtk.Window())
+    def test_disable_command(self, option, config, plugin):
+        window = plugin.settings_window(Gtk.Window())
         window.run()
 
-        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
-        switch.set_active(False)
+        switch = Q.select(window.widget, Q.props("name", f"{option}_switch"))
+        switch.props.active = False
         switch.notify("activate")
 
-        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
-        assert entry.get_sensitive() is False
-        assert entry.get_text() == ""
+        entry = Q.select(window.widget, Q.props("name", f"{option}_entry"))
+        assert entry.props.sensitive is False
+        assert entry.props.text == ""
 
         window.widget.emit("response", 0)
         assert config.has_option(SECTION_NAME, option) is False
 
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
-    def test_enable_command(self, option, config, subject):
+    def test_enable_command(self, option, config, plugin):
         config.remove(SECTION_NAME, option)
 
-        window = subject.settings_window(Gtk.Window())
+        window = plugin.settings_window(Gtk.Window())
         window.run()
 
-        switch = Q.select(window.widget, Q.name(f"{option}_switch"))
-        switch.set_active(True)
+        switch = Q.select(window.widget, Q.props("name", f"{option}_switch"))
+        switch.props.active = True
         switch.notify("activate")
 
-        entry = Q.select(window.widget, Q.name(f"{option}_entry"))
-        assert entry.get_sensitive() is True
-        entry.set_text("echo changed")
+        entry = Q.select(window.widget, Q.props("name", f"{option}_entry"))
+        assert entry.props.sensitive is True
+        entry.props.text = "echo changed"
 
         window.widget.emit("response", 0)
         assert config.get(SECTION_NAME, option) == "echo changed"
