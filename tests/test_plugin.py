@@ -2,8 +2,9 @@ import subprocess
 
 import pytest
 from gi.repository import Gtk
+from wiring import Graph
 
-from tomate.pomodoro import Bus, Config, Events, graph
+from tomate.pomodoro import Bus, Config, Events
 from tomate.ui.testing import Q
 
 SECTION_NAME = "exec_plugin"
@@ -24,18 +25,22 @@ def bus() -> Bus:
 
 
 @pytest.fixture
+def graph() -> Graph:
+    g = Graph()
+    g.register_instance(Graph, g)
+    return g
+
+
+@pytest.fixture
 def config(bus, tmpdir):
     instance = Config(bus)
     tmp_path = tmpdir.mkdir("tomate").join("tomate.config")
     instance.config_path = lambda: tmp_path.strpath
-
-    graph.providers.clear()
-    graph.register_instance("tomate.config", instance)
     return instance
 
 
 @pytest.fixture
-def plugin(bus, config):
+def plugin(bus, config, graph):
     graph.providers.clear()
     graph.register_instance("tomate.config", config)
     graph.register_instance("tomate.bus", bus)
@@ -43,7 +48,7 @@ def plugin(bus, config):
     import exec_plugin
 
     instance = exec_plugin.ExecPlugin()
-    instance.connect(bus)
+    instance.configure(bus, graph)
     return instance
 
 

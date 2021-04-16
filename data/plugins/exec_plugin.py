@@ -6,10 +6,11 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 
+from wiring import Graph
 from gi.repository import Gtk
 
 import tomate.pomodoro.plugin as plugin
-from tomate.pomodoro import Events, on, graph, suppress_errors
+from tomate.pomodoro import Bus, Config, Events, on, suppress_errors
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,11 @@ class ExecPlugin(plugin.Plugin):
 
     @suppress_errors
     def __init__(self):
-        super(ExecPlugin, self).__init__()
+        super().__init__()
+        self.config = None
+
+    def configure(self, bus: Bus, graph: Graph) -> None:
+        super().configure(bus, graph)
         self.config = graph.get("tomate.config")
 
     @suppress_errors
@@ -80,7 +85,7 @@ class ExecPlugin(plugin.Plugin):
 class SettingsDialog:
     rows = 0
 
-    def __init__(self, config, toplevel):
+    def __init__(self, config: Config, toplevel):
         self.config = config
         self.create_widget(toplevel)
 
