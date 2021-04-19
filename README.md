@@ -2,7 +2,7 @@ Tomate Exec Plugin
 ===================
 
 Tomate is a timer for the Pomodoro Technique.
-With this plugin one can executes commands when the alarm ends,stops or finish.
+With this plugin one can execute commands when the alarm ends, stops or finish.
 
 Installation
 ------------
@@ -13,22 +13,6 @@ Bugs and Suggestions
 --------------------
 
 Bugs and suggestions should be reported [here](https://github.com/eliostvs/tomate-exec-plugin/issues).
-
-Changelog
----------
-
-### 0.2.0
-
-#### Added
-
-- Change the plugin description
-
-### 0.1.0
-
-
-#### Added
-
-- First release
 
 License
 -------
