@@ -104,13 +104,13 @@ class TestSettingsWindow:
         ],
     )
     def test_with_custom_commands(self, option, command, plugin):
-        window = plugin.settings_window(Gtk.Window())
-        window.run()
+        dialog = plugin.settings_window(Gtk.Window())
+        dialog.run()
 
-        switch = Q.select(window.widget, Q.props("name", f"{option}_switch"))
+        switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         assert switch.props.active is True
 
-        entry = Q.select(window.widget, Q.props("name", f"{option}_entry"))
+        entry = Q.select(dialog.widget, Q.props("name", f"{option}_entry"))
         assert entry.props.text == command
 
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
@@ -120,45 +120,51 @@ class TestSettingsWindow:
 
         assert config.has_section(SECTION_NAME) is False
 
-        window = plugin.settings_window(Gtk.Window())
-        window.run()
+        dialog = plugin.settings_window(Gtk.Window())
+        dialog.run()
 
-        switch = Q.select(window.widget, Q.props("name", f"{option}_switch"))
+        switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         assert switch.props.active is False
 
-        entry = Q.select(window.widget, Q.props("name", f"{option}_entry"))
+        entry = Q.select(dialog.widget, Q.props("name", f"{option}_entry"))
         assert entry.props.text == ""
 
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
     def test_disable_command(self, option, config, plugin):
-        window = plugin.settings_window(Gtk.Window())
-        window.run()
+        dialog = plugin.settings_window(Gtk.Window())
+        dialog.run()
 
-        switch = Q.select(window.widget, Q.props("name", f"{option}_switch"))
+        switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         switch.props.active = False
         switch.notify("activate")
 
-        entry = Q.select(window.widget, Q.props("name", f"{option}_entry"))
+        entry = Q.select(dialog.widget, Q.props("name", f"{option}_entry"))
         assert entry.props.sensitive is False
         assert entry.props.text == ""
 
-        window.widget.emit("response", 0)
+        dialog.widget.emit("response", 0)
+        assert dialog.widget.props.window is None
+
+        config.load()
         assert config.has_option(SECTION_NAME, option) is False
 
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
     def test_configure_command(self, option, config, plugin):
         config.remove(SECTION_NAME, option)
 
-        window = plugin.settings_window(Gtk.Window())
-        window.run()
+        dialog = plugin.settings_window(Gtk.Window())
+        dialog.run()
 
-        switch = Q.select(window.widget, Q.props("name", f"{option}_switch"))
+        switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         switch.props.active = True
         switch.notify("activate")
 
-        entry = Q.select(window.widget, Q.props("name", f"{option}_entry"))
+        entry = Q.select(dialog.widget, Q.props("name", f"{option}_entry"))
         assert entry.props.sensitive is True
         entry.props.text = "echo changed"
 
-        window.widget.emit("response", 0)
+        dialog.widget.emit("response", 0)
+        assert dialog.widget.props.window is None
+
+        config.load()
         assert config.get(SECTION_NAME, option) == "echo changed"
