@@ -146,7 +146,7 @@ class TestSettingsWindow:
         assert config.has_option(SECTION_NAME, option) is False
 
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
-    def test_enable_command(self, option, config, plugin):
+    def test_configure_command(self, option, config, plugin):
         config.remove(SECTION_NAME, option)
 
         window = plugin.settings_window(Gtk.Window())
