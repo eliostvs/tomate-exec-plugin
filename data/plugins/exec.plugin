@@ -1,9 +1,9 @@
 [Core]
-Name = ExecCommand
+Name = Run Scripts
 Module = exec_plugin
 
 [Documentation]
 Author = Elio Esteves Duarte
-Version = 0.3.0
+Version = 0.4.0
 Website = https://github.com/eliostvs/tomate-exec-plugin
 Description = Run scripts when a session starts, stops or finishes
