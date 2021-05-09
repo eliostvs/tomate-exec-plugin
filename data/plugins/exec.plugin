@@ -1,5 +1,5 @@
 [Core]
-Name = ExecCommand
+Name = Run Scripts
 Module = exec_plugin
 
 [Documentation]
