@@ -18,11 +18,6 @@ SECTION_NAME = "exec_plugin"
 START_OPTION = "start_command"
 STOP_OPTION = "stop_command"
 FINISH_OPTION = "finish_command"
-OPTIONS = [
-    START_OPTION,
-    STOP_OPTION,
-    FINISH_OPTION,
-]
 
 
 def strip_space(command):
