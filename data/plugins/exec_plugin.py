@@ -135,14 +135,14 @@ class SettingsDialog:
         grid.attach_next_to(switch, label, Gtk.PositionType.RIGHT, 1, 1)
 
     def on_command_change(self, entry: Gtk.Entry, _, option: str) -> None:
-        command = strip_space(entry.get_text())
+        command = strip_space(entry.props.text)
         if command:
             logger.debug("action=set_option option=%s command=%s", option, command)
             self.config.set(SECTION_NAME, option, command)
 
     def on_option_change(self, switch: Gtk.Switch, _, entry: Gtk.Entry, option: str) -> None:
-        if switch.get_active():
-            entry.set_sensitive(True)
+        if switch.props.active:
+            entry.props.sensitive = True
         else:
             self.remove_option(entry, option)
 
