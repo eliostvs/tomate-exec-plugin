@@ -15,13 +15,13 @@ from tomate.pomodoro import Bus, Config, Events, on, suppress_errors
 logger = logging.getLogger(__name__)
 
 SECTION_NAME = "exec_plugin"
-START_OPTION_NAME = "start_command"
-STOP_OPTION_NAME = "stop_command"
-FINISH_OPTION_NAME = "finish_command"
-COMMANDS = [
-    START_OPTION_NAME,
-    STOP_OPTION_NAME,
-    FINISH_OPTION_NAME,
+START_OPTION = "start_command"
+STOP_OPTION = "stop_command"
+FINISH_OPTION = "finish_command"
+OPTIONS = [
+    START_OPTION,
+    STOP_OPTION,
+    FINISH_OPTION,
 ]
 
 
@@ -45,17 +45,17 @@ class ExecPlugin(plugin.Plugin):
     @suppress_errors
     @on(Events.SESSION_START)
     def on_session_started(self, *_, **__):
-        return self.call_command(START_OPTION_NAME, "start")
+        return self.call_command(START_OPTION, "start")
 
     @suppress_errors
     @on(Events.SESSION_INTERRUPT)
     def on_session_stopped(self, *_, **__):
-        return self.call_command(STOP_OPTION_NAME, "stop")
+        return self.call_command(STOP_OPTION, "stop")
 
     @suppress_errors
     @on(Events.SESSION_END)
     def on_session_finished(self, *_, **__):
-        return self.call_command(FINISH_OPTION_NAME, "finish")
+        return self.call_command(FINISH_OPTION, "finish")
 
     def call_command(self, option, event):
         command = self.read_command(option)
@@ -83,19 +83,17 @@ class ExecPlugin(plugin.Plugin):
 
 
 class SettingsDialog:
-    rows = 0
-
     def __init__(self, config: Config, toplevel):
         self.config = config
-        self.create_widget(toplevel)
+        self.widget = self.create_dialog(toplevel)
 
-    def create_widget(self, toplevel):
+    def create_dialog(self, toplevel) -> Gtk.Dialog:
         grid = Gtk.Grid(column_spacing=12, row_spacing=12, margin_bottom=12)
         self.create_section(grid)
-        self.create_option(grid, _("On start:"), START_OPTION_NAME)
-        self.create_option(grid, _("On stop:"), STOP_OPTION_NAME)
-        self.create_option(grid, _("On finish:"), FINISH_OPTION_NAME)
-        self.widget = Gtk.Dialog(
+        self.create_option(grid, 1, _("On start:"), START_OPTION)
+        self.create_option(grid, 3, _("On stop:"), STOP_OPTION)
+        self.create_option(grid, 5, _("On finish:"), FINISH_OPTION)
+        dialog = Gtk.Dialog(
             border_width=12,
             modal=True,
             resizable=False,
@@ -103,75 +101,52 @@ class SettingsDialog:
             transient_for=toplevel,
             window_position=Gtk.WindowPosition.CENTER_ON_PARENT,
         )
-        self.widget.add_button(_("Close"), Gtk.ResponseType.CLOSE)
-        self.widget.connect("response", self.on_close)
-        self.widget.set_size_request(350, -1)
-        self.widget.get_content_area().add(grid)
+        dialog.add_button(_("Close"), Gtk.ResponseType.CLOSE)
+        dialog.connect("response", lambda w, _: w.destroy())
+        dialog.set_size_request(350, -1)
+        dialog.get_content_area().add(grid)
+        return dialog
 
-    def create_section(self, grid):
+    def create_section(self, grid: Gtk.Grid) -> None:
         label = Gtk.Label(
-            label="<b>{0}</b>".format(_("Execute command")),
+            label="<b>{0}</b>".format(_("Commands")),
             halign=Gtk.Align.START,
             hexpand=True,
             use_markup=True,
         )
-        grid.attach(label, 0, self.rows, 1, 1)
-        self.rows += 1
+        grid.attach(label, 0, 0, 1, 1)
 
-    def run(self):
-        self.read_config()
+    def run(self) -> None:
         self.widget.show_all()
         return self.widget
 
-    def on_close(self, widget, _):
-        for command_name in COMMANDS:
-            entry = getattr(self, command_name + "_entry")
-            command = strip_space(entry.get_text())
-            if command:
-                logger.debug("action=setConfig option=%s value=%s", command_name, command)
-                self.config.set(SECTION_NAME, command_name, command)
+    def create_option(self, grid: Gtk.Grid, row: int, label: str, option: str) -> None:
+        command = self.config.get(SECTION_NAME, option, fallback="")
 
-        widget.destroy()
-
-    def read_config(self):
-        logger.debug("action=readConfig")
-
-        for command_name in COMMANDS:
-            command = self.config.get(SECTION_NAME, command_name)
-            switch = getattr(self, command_name + "_switch")
-            entry = getattr(self, command_name + "_entry")
-
-            if command is not None:
-                switch.props.active = True
-                entry.set_properties(sensitive=True, text=command)
-            else:
-                switch.props.active = False
-                entry.props.sensitive = False
-
-    def create_option(self, grid, label, command):
         label = Gtk.Label(label=_(label), hexpand=True, halign=Gtk.Align.END)
-        grid.attach(label, 0, self.rows, 1, 1)
+        grid.attach(label, 0, row, 1, 1)
 
-        switch = Gtk.Switch(hexpand=True, halign=Gtk.Align.START, name=command + "_switch")
-        switch.connect("notify::active", self.on_switch_toggle, command)
+        entry = Gtk.Entry(editable=True, sensitive=bool(command), text=command, name=option + "_entry")
+        entry.connect("notify::text", self.on_command_change, option)
+        grid.attach(entry, 0, row + 1, 4, 1)
+
+        switch = Gtk.Switch(hexpand=True, halign=Gtk.Align.START, active=bool(command), name=option + "_switch")
+        switch.connect("notify::active", self.on_option_change, entry, option)
         grid.attach_next_to(switch, label, Gtk.PositionType.RIGHT, 1, 1)
-        setattr(self, command + "_switch", switch)
-        self.rows += 1
 
-        entry = Gtk.Entry(editable=True, sensitive=False, name=command + "_entry")
-        grid.attach(entry, 0, self.rows, 4, 1)
-        setattr(self, command + "_entry", entry)
-        self.rows += 1
+    def on_command_change(self, entry: Gtk.Entry, _, option: str) -> None:
+        command = strip_space(entry.get_text())
+        if command:
+            logger.debug("action=set_option option=%s command=%s", option, command)
+            self.config.set(SECTION_NAME, option, command)
 
-    def on_switch_toggle(self, switch, _, command_name):
-        entry = getattr(self, command_name + "_entry")
-
+    def on_option_change(self, switch: Gtk.Switch, _, entry: Gtk.Entry, option: str) -> None:
         if switch.get_active():
             entry.set_sensitive(True)
         else:
-            self.reset_option(entry, command_name)
+            self.remove_option(entry, option)
 
-    def reset_option(self, entry, command_name):
-        logger.debug("action=remove_config command=%s", command_name)
-        self.config.remove(SECTION_NAME, command_name)
+    def remove_option(self, entry: Gtk.Entry, option: str) -> None:
+        logger.debug("action=remove_option option=%s", option)
+        self.config.remove(SECTION_NAME, option)
         entry.set_properties(text="", sensitive=False)
