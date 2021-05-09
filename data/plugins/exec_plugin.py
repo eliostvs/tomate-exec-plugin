@@ -97,7 +97,7 @@ class SettingsDialog:
             window_position=Gtk.WindowPosition.CENTER_ON_PARENT,
         )
         dialog.add_button(_("Close"), Gtk.ResponseType.CLOSE)
-        dialog.connect("response", lambda w, _: w.destroy())
+        dialog.connect("response", lambda widget, _: widget.destroy())
         dialog.set_size_request(350, -1)
         dialog.get_content_area().add(grid)
         return dialog
