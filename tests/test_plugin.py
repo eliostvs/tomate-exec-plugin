@@ -105,7 +105,6 @@ class TestSettingsWindow:
     )
     def test_with_custom_commands(self, option, command, plugin):
         dialog = plugin.settings_window(Gtk.Window())
-        dialog.run()
 
         switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         assert switch.props.active is True
@@ -121,7 +120,6 @@ class TestSettingsWindow:
         assert config.has_section(SECTION_NAME) is False
 
         dialog = plugin.settings_window(Gtk.Window())
-        dialog.run()
 
         switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         assert switch.props.active is False
@@ -132,7 +130,6 @@ class TestSettingsWindow:
     @pytest.mark.parametrize("option", ["start_command", "stop_command", "finish_command"])
     def test_disable_command(self, option, config, plugin):
         dialog = plugin.settings_window(Gtk.Window())
-        dialog.run()
 
         switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         switch.props.active = False
@@ -153,7 +150,6 @@ class TestSettingsWindow:
         config.remove(SECTION_NAME, option)
 
         dialog = plugin.settings_window(Gtk.Window())
-        dialog.run()
 
         switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         switch.props.active = True
