@@ -83,11 +83,6 @@ class SettingsDialog:
         self.widget = self.create_dialog(toplevel)
 
     def create_dialog(self, toplevel) -> Gtk.Dialog:
-        grid = Gtk.Grid(column_spacing=12, row_spacing=12, margin_bottom=12)
-        self.create_section(grid)
-        self.create_option(grid, 1, _("On start:"), START_OPTION)
-        self.create_option(grid, 3, _("On stop:"), STOP_OPTION)
-        self.create_option(grid, 5, _("On finish:"), FINISH_OPTION)
         dialog = Gtk.Dialog(
             border_width=12,
             modal=True,
@@ -99,8 +94,16 @@ class SettingsDialog:
         dialog.add_button(_("Close"), Gtk.ResponseType.CLOSE)
         dialog.connect("response", lambda widget, _: widget.destroy())
         dialog.set_size_request(350, -1)
-        dialog.get_content_area().add(grid)
+        dialog.get_content_area().add(self.create_options())
         return dialog
+
+    def create_options(self):
+        grid = Gtk.Grid(column_spacing=12, row_spacing=12, margin_bottom=12)
+        self.create_section(grid)
+        self.create_option(grid, 1, _("On start:"), START_OPTION)
+        self.create_option(grid, 3, _("On stop:"), STOP_OPTION)
+        self.create_option(grid, 5, _("On finish:"), FINISH_OPTION)
+        return grid
 
     def create_section(self, grid: Gtk.Grid) -> None:
         label = Gtk.Label(
