@@ -39,17 +39,17 @@ class ExecPlugin(plugin.Plugin):
 
     @suppress_errors
     @on(Events.SESSION_START)
-    def on_session_started(self, *_, **__):
+    def on_session_started(self, **__):
         return self.call_command(START_OPTION, "start")
 
     @suppress_errors
     @on(Events.SESSION_INTERRUPT)
-    def on_session_stopped(self, *_, **__):
+    def on_session_stopped(self, **__):
         return self.call_command(STOP_OPTION, "stop")
 
     @suppress_errors
     @on(Events.SESSION_END)
-    def on_session_finished(self, *_, **__):
+    def on_session_finished(self, **__):
         return self.call_command(FINISH_OPTION, "finish")
 
     def call_command(self, option, event):
