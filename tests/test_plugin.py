@@ -133,7 +133,6 @@ class TestSettingsWindow:
 
         switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         switch.props.active = False
-        switch.notify("activate")
 
         entry = Q.select(dialog.widget, Q.props("name", f"{option}_entry"))
         assert entry.props.sensitive is False
@@ -153,7 +152,6 @@ class TestSettingsWindow:
 
         switch = Q.select(dialog.widget, Q.props("name", f"{option}_switch"))
         switch.props.active = True
-        switch.notify("activate")
 
         entry = Q.select(dialog.widget, Q.props("name", f"{option}_entry"))
         assert entry.props.sensitive is True
