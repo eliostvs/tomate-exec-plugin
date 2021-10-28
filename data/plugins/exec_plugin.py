@@ -3,6 +3,7 @@ from string import Template
 import subprocess
 from locale import gettext as _
 from typing import Optional, Dict, List
+import functools
 
 import gi
 
@@ -20,7 +21,7 @@ SECTION_NAME = "exec_plugin"
 START_OPTION = "start_command"
 STOP_OPTION = "stop_command"
 FINISH_OPTION = "finish_command"
-
+ADVANCED_OPTION = "advanced_command"
 
 def strip_space(command: Optional[str]) -> Optional[str]:
     if command is not None:
@@ -54,6 +55,10 @@ class ExecPlugin(plugin.Plugin):
     def on_session_finished(self, payload: SessionPayload):
         return self.call_command(FINISH_OPTION, Events.SESSION_END, payload)
 
+    def on_all_session_events(self, event: Events, payload: SessionPayload, **__):
+        return self.call_advanced_command(event, payload)
+    on_all_session_events._events = [Events.SESSION_START, Events.SESSION_INTERRUPT, Events.SESSION_END]
+
     def call_command(self, section, event: Events, payload: SessionPayload):
         command = self.read_command(section, {"event": event.name, "type": payload.type.name})
         if command:
@@ -78,6 +83,37 @@ class ExecPlugin(plugin.Plugin):
     @staticmethod
     def _interpolate(template: str, replacements: Dict[str, str]) -> str:
         return Template(template).substitute(**replacements)
+
+    def call_advanced_command(self, event: Events, payload: SessionPayload):
+        command_template = self.read_command(ADVANCED_OPTION, {})
+        if command_template is not None:
+            command = self._interpolate_advanced_command(command_template, {'%e': event.name, '%t': payload.type.name})
+            try:
+                logger.debug("action=runAdvancedCommandStart event=%s cmd='%s'", event, command)
+                output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
+                logger.debug("action=runAdvancedCommandStart event=%s output=%s", event, output)
+                return True
+            except subprocess.CalledProcessError as error:
+                logger.debug(
+                    "action=runAdvancedCommandStart event=%s cmd=%s output=%s returncode=%s",
+                    event,
+                    error.cmd,
+                    error.output,
+                    error.returncode,
+                )
+        return False
+
+    @staticmethod
+    def _interpolate_advanced_command(command_template: str, replacements: Dict[str, str]) -> str:
+        import shlex
+        split = shlex.split(command_template)
+        r = replacements
+        replaced = [
+            (r[s] if s in r else s)
+            for s in split
+        ]
+        joined = shlex.join(replaced)
+        return joined
 
     def settings_window(self, toplevel):
         return SettingsDialog(self.config, toplevel)
@@ -109,6 +145,7 @@ class SettingsDialog:
         self.create_option(grid, 1, _("On start:"), START_OPTION)
         self.create_option(grid, 3, _("On stop:"), STOP_OPTION)
         self.create_option(grid, 5, _("On finish:"), FINISH_OPTION)
+        self.create_option(grid, 7, _("Advanced:"), ADVANCED_OPTION)
         return grid
 
     @staticmethod
