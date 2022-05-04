@@ -1,6 +1,8 @@
 import logging
+from string import Template
 import subprocess
 from locale import gettext as _
+from typing import Optional, Dict
 
 import gi
 
@@ -10,7 +12,7 @@ from wiring import Graph
 from gi.repository import Gtk
 
 import tomate.pomodoro.plugin as plugin
-from tomate.pomodoro import Bus, Config, Events, on, suppress_errors
+from tomate.pomodoro import Bus, Config, Events, on, suppress_errors, SessionPayload
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ STOP_OPTION = "stop_command"
 FINISH_OPTION = "finish_command"
 
 
-def strip_space(command):
+def strip_space(command: Optional[str]) -> Optional[str]:
     if command is not None:
         return command.strip()
 
@@ -39,30 +41,30 @@ class ExecPlugin(plugin.Plugin):
 
     @suppress_errors
     @on(Events.SESSION_START)
-    def on_session_started(self, **__):
-        return self.call_command(START_OPTION, "start")
+    def on_session_started(self, payload: SessionPayload):
+        return self.call_command(START_OPTION, Events.SESSION_START, payload)
 
     @suppress_errors
     @on(Events.SESSION_INTERRUPT)
-    def on_session_stopped(self, **__):
-        return self.call_command(STOP_OPTION, "stop")
+    def on_session_stopped(self, payload: SessionPayload):
+        return self.call_command(STOP_OPTION, Events.SESSION_INTERRUPT, payload)
 
     @suppress_errors
     @on(Events.SESSION_END)
-    def on_session_finished(self, **__):
-        return self.call_command(FINISH_OPTION, "finish")
+    def on_session_finished(self, payload: SessionPayload):
+        return self.call_command(FINISH_OPTION, Events.SESSION_END, payload)
 
-    def call_command(self, option, event):
-        command = self.read_command(option)
+    def call_command(self, section, event: Events, payload: SessionPayload):
+        command = self.read_command(section, {"event": event.name, "type": payload.type.name})
         if command:
             try:
-                logger.debug("action=runCommandStart event=%s cmd='%s'", event, command)
+                logger.debug("action=run-command-start cmd='%s' event=, ", event, command)
                 output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-                logger.debug("action=runCommandEnd event=%s output=%s", event, output)
+                logger.debug("action=run-command-end event=%s output=%s", event, output)
                 return True
             except subprocess.CalledProcessError as error:
                 logger.debug(
-                    "action=runCommandFailed event=%s cmd=%s output=%s returncode=%s",
+                    "action=run-command-failed event=%s cmd=%s output=%s return-code=%s",
                     event,
                     error.cmd,
                     error.output,
@@ -70,8 +72,14 @@ class ExecPlugin(plugin.Plugin):
                 )
         return False
 
-    def read_command(self, option):
-        return strip_space(self.config.get(SECTION_NAME, option))
+    def read_command(self, section: str, repl: Dict[str, str]) -> Optional[str]:
+        template = strip_space(self.config.get(SECTION_NAME, section))
+        if template:
+            return self._interpolate(template, repl)
+
+    @staticmethod
+    def _interpolate(template: str, replacements: Dict[str, str]) -> str:
+        return Template(template).substitute(**replacements)
 
     def settings_window(self, toplevel):
         return SettingsDialog(self.config, toplevel)
@@ -105,7 +113,8 @@ class SettingsDialog:
         self.create_option(grid, 5, _("On finish:"), FINISH_OPTION)
         return grid
 
-    def create_section(self, grid: Gtk.Grid) -> None:
+    @staticmethod
+    def create_section(grid: Gtk.Grid) -> None:
         label = Gtk.Label(
             label="<b>{0}</b>".format(_("Commands")),
             halign=Gtk.Align.START,
