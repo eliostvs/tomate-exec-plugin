@@ -20,12 +20,11 @@ def random_payload(session_type: SessionType = SessionType.POMODORO) -> SessionP
 
 
 @pytest.fixture
-def check_output(mocker, monkeypatch):
+def run(mocker, monkeypatch):
     import exec_plugin
-
-    check_output = mocker.Mock(spec=subprocess.check_output)
-    monkeypatch.setattr(exec_plugin.subprocess, "check_output", check_output)
-    return check_output
+    mock = mocker.Mock(spec=subprocess.run)
+    monkeypatch.setattr(exec_plugin.subprocess, "run", mock)
+    return mock
 
 
 @pytest.fixture
@@ -69,13 +68,13 @@ def plugin(bus, config, graph):
         (Events.SESSION_END, "finish_command"),
     ],
 )
-def test_execute_command_when_event_is_trigger(event, option, bus, check_output, config, plugin):
+def test_execute_command_when_event_is_trigger(event, option, bus, run, config, plugin):
     plugin.activate()
 
     bus.send(event, random_payload())
 
     command = config.get(SECTION_NAME, option)
-    check_output.assert_called_once_with(command, shell=True, stderr=subprocess.STDOUT)
+    run.assert_called_once_with(command.split(), shell=True, check=True)
 
 
 @pytest.mark.parametrize(
@@ -86,13 +85,13 @@ def test_execute_command_when_event_is_trigger(event, option, bus, check_output,
         (Events.SESSION_END, "finish_command", SessionType.SHORT_BREAK),
     ],
 )
-def test_interpolate_command(event, section, session_type, bus, check_output, config, plugin):
+def test_interpolate_command(event, section, session_type, bus, run, config, plugin):
     config.set(SECTION_NAME, section, "$event $type")
     plugin.activate()
 
     bus.send(event, random_payload(session_type))
 
-    check_output.assert_called_once_with(f"{event.name} {session_type.name}", shell=True, stderr=subprocess.STDOUT)
+    run.assert_called_once_with([event.name, session_type.name], shell=True, check=True)
 
 
 @pytest.mark.parametrize(
@@ -103,13 +102,13 @@ def test_interpolate_command(event, section, session_type, bus, check_output, co
         (Events.SESSION_END, "finish_command"),
     ],
 )
-def test_does_not_execute_commands_when_they_are_not_configured(event, option, bus, check_output, config, plugin):
+def test_does_not_execute_commands_when_they_are_not_configured(event, option, bus, run, config, plugin):
     config.remove(SECTION_NAME, option)
     plugin.activate()
 
     assert bus.send(event, random_payload()) == [False]
 
-    check_output.assert_not_called()
+    run.assert_not_called()
 
 
 def test_execute_command_fail(bus, config, plugin):
