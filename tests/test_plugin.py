@@ -69,12 +69,12 @@ def plugin(bus, config, graph):
     ],
 )
 def test_execute_command_when_event_is_trigger(event, option, bus, run, config, plugin):
+    command = config.get(SECTION_NAME, option)
     plugin.activate()
 
     bus.send(event, random_payload())
 
-    command = config.get(SECTION_NAME, option)
-    run.assert_called_once_with(command.split(), shell=True, check=True)
+    run.assert_called_once_with(command, shell=True, check=True)
 
 
 @pytest.mark.parametrize(
@@ -91,7 +91,7 @@ def test_interpolate_command(event, section, session_type, bus, run, config, plu
 
     bus.send(event, random_payload(session_type))
 
-    run.assert_called_once_with([event.name, session_type.name], shell=True, check=True)
+    run.assert_called_once_with(f"{event.name} {session_type.name}", shell=True, check=True)
 
 
 @pytest.mark.parametrize(

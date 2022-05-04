@@ -71,13 +71,13 @@ class ExecPlugin(plugin.Plugin):
                 )
         return False
 
-    def read_command(self, section: str, repl: Dict[str, str]) -> List[str]:
+    def read_command(self, section: str, repl: Dict[str, str]) -> Optional[str]:
         template = strip_space(self.config.get(SECTION_NAME, section))
-        return self._interpolate(template, repl) if template else []
+        return self._interpolate(template, repl) if template else None
 
     @staticmethod
-    def _interpolate(template: str, replacements: Dict[str, str]) -> List[str]:
-        return Template(template).substitute(**replacements).split()
+    def _interpolate(template: str, replacements: Dict[str, str]) -> str:
+        return Template(template).substitute(**replacements)
 
     def settings_window(self, toplevel):
         return SettingsDialog(self.config, toplevel)
