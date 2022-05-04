@@ -4,10 +4,19 @@ import pytest
 from gi.repository import Gtk
 from wiring import Graph
 
-from tomate.pomodoro import Bus, Config, Events
+from tomate.pomodoro import Bus, Config, Events, SessionPayload, SessionType
 from tomate.ui.testing import Q
 
 SECTION_NAME = "exec_plugin"
+
+
+def random_payload(session_type: SessionType = SessionType.POMODORO) -> SessionPayload:
+    return SessionPayload(
+        id="1234",
+        type=session_type,
+        duration=0,
+        pomodoros=0,
+    )
 
 
 @pytest.fixture
@@ -63,10 +72,27 @@ def plugin(bus, config, graph):
 def test_execute_command_when_event_is_trigger(event, option, bus, check_output, config, plugin):
     plugin.activate()
 
-    bus.send(event)
+    bus.send(event, random_payload())
 
     command = config.get(SECTION_NAME, option)
     check_output.assert_called_once_with(command, shell=True, stderr=subprocess.STDOUT)
+
+
+@pytest.mark.parametrize(
+    "event, section, session_type",
+    [
+        (Events.SESSION_START, "start_command", SessionType.POMODORO),
+        (Events.SESSION_INTERRUPT, "stop_command", SessionType.LONG_BREAK),
+        (Events.SESSION_END, "finish_command", SessionType.SHORT_BREAK),
+    ],
+)
+def test_interpolate_command(event, section, session_type, bus, check_output, config, plugin):
+    config.set(SECTION_NAME, section, "$event $type")
+    plugin.activate()
+
+    bus.send(event, random_payload(session_type))
+
+    check_output.assert_called_once_with(f"{event.name} {session_type.name}", shell=True, stderr=subprocess.STDOUT)
 
 
 @pytest.mark.parametrize(
@@ -81,7 +107,7 @@ def test_does_not_execute_commands_when_they_are_not_configured(event, option, b
     config.remove(SECTION_NAME, option)
     plugin.activate()
 
-    assert bus.send(event) == [False]
+    assert bus.send(event, random_payload()) == [False]
 
     check_output.assert_not_called()
 
@@ -91,7 +117,7 @@ def test_execute_command_fail(bus, config, plugin):
 
     plugin.activate()
 
-    assert bus.send(Events.SESSION_START) == [False]
+    assert bus.send(Events.SESSION_START, random_payload()) == [False]
 
 
 class TestSettingsWindow:
