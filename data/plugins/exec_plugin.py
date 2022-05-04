@@ -2,7 +2,7 @@ import logging
 from string import Template
 import subprocess
 from locale import gettext as _
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 import gi
 
@@ -58,9 +58,8 @@ class ExecPlugin(plugin.Plugin):
         command = self.read_command(section, {"event": event.name, "type": payload.type.name})
         if command:
             try:
-                logger.debug("action=run-command-start cmd='%s' event=, ", event, command)
-                output = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-                logger.debug("action=run-command-end event=%s output=%s", event, output)
+                logger.debug("action=call-command cmd=%s", command)
+                subprocess.run(command, shell=True, check=True)
                 return True
             except subprocess.CalledProcessError as error:
                 logger.debug(
@@ -72,14 +71,13 @@ class ExecPlugin(plugin.Plugin):
                 )
         return False
 
-    def read_command(self, section: str, repl: Dict[str, str]) -> Optional[str]:
+    def read_command(self, section: str, repl: Dict[str, str]) -> List[str]:
         template = strip_space(self.config.get(SECTION_NAME, section))
-        if template:
-            return self._interpolate(template, repl)
+        return self._interpolate(template, repl) if template else []
 
     @staticmethod
-    def _interpolate(template: str, replacements: Dict[str, str]) -> str:
-        return Template(template).substitute(**replacements)
+    def _interpolate(template: str, replacements: Dict[str, str]) -> List[str]:
+        return Template(template).substitute(**replacements).split()
 
     def settings_window(self, toplevel):
         return SettingsDialog(self.config, toplevel)
