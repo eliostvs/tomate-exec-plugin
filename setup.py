@@ -46,4 +46,5 @@ setup(
     url="https://github.com/eliostvs/tomate-exec-plugin",
     version="0.8.1",
     zip_safe=False,
+    py_modules=[],
 )
