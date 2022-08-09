@@ -44,6 +44,7 @@ setup(
     name="tomate-exec-plugin",
     data_files=find_data_files(DATA_FILES, "tomate"),
     url="https://github.com/eliostvs/tomate-exec-plugin",
-    version="0.8.1",
+    version="0.8.2",
     zip_safe=False,
+    py_modules=[],
 )
